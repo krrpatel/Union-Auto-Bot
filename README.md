@@ -95,7 +95,7 @@ Before diving in, ensure you have:
 
 1. **Launch the Bot**:
    ```bash
-   node index.js
+   node main.js
    ```
 
 2. **Navigate the Menu** 🎮:
