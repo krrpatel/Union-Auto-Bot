@@ -1,27 +1,49 @@
 {
-  "name": "Union-Auto-bot",
+  "name": "union-auto-bot",
   "version": "1.0.0",
-  "description": "A Union Testnet automation bot with Blessed terminal UI, transaction charts, and more.",
-  "main": "main.js",
+  "description": "A Node.js automation tool for cross-chain token transfers on testnet networks like SEI, XION, and Babylon using the Union protocol.",
+  "main": "index.js",
   "scripts": {
-    "start": "node main.js"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kazuha787/Union-Auto-Bot.git"
   },
   "keywords": [
-    "union",
+    "blockchain",
+    "cross-chain",
     "testnet",
-    "auto-bot",
-    "ethereum",
-    "blessed",
-    "dashboard",
-    "terminal-ui"
+    "union-protocol",
+    "sei",
+    "xion",
+    "babylon",
+    "cryptocurrency",
+    "automation"
   ],
   "author": "Kazuha",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Kazuha787/Union-Auto-Bot/issues"
+  },
+  "homepage": "https://github.com/Kazuha787/Union-Auto-Bot#readme",
   "dependencies": {
-    "axios": "^1.6.0",
-    "blessed": "^0.1.81",
-    "blessed-contrib": "^4.10.3",
-    "ethers": "^6.8.1",
-    "moment-timezone": "^0.5.44"
+    "@cosmjs/encoding": "^0.32.4",
+    "@cosmjs/proto-signing": "^0.32.4",
+    "@cosmjs/stargate": "^0.32.4",
+    "axios": "^1.7.7",
+    "cosmjs-types": "^0.9.0",
+    "ethers": "^6.13.2",
+    "viem": "^2.21.28"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
