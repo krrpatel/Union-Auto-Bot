@@ -156,7 +156,6 @@ async function getTransferParams(isXionToBabylon = false) {
     amount: isXionToBabylon ? (amount || "0.01") : (amount || "0.0001"),
     count: parseInt(count) || 1,
     delay: (delay ? parseInt(delay) : 0) * 1000
-    txns: txns
   };
 
   if (isNaN(params.amount) || params.amount <= 0) {
@@ -172,7 +171,7 @@ async function getTransferParams(isXionToBabylon = false) {
   console.log(`   Amount: ${params.amount} ${isXionToBabylon ? "Token" : "SEI"} per transfer`);
   console.log(`   Transfers: ${params.count}`);
   await sleep(1000);
-  return params;
+  return { params ,txns };
 }
 
 async function getXionTransferParams() {
