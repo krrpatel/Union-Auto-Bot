@@ -149,6 +149,7 @@ async function getTransferParams(isXionToBabylon = false) {
   const amountPrompt = isXionToBabylon ? "Enter token amount (e.g., 0.01): " : "Enter SEI amount (default: 0.0001): ";
   const amount = await getUserInput(amountPrompt);
   const count = await getUserInput("Number of transfers (default: 1): ");
+  const delay = await getUserInput("Delay between transactions in seconds (default: 0): ");
 
   const params = {
     amount: isXionToBabylon ? (amount || "0.01") : (amount || "0.0001"),
@@ -187,6 +188,7 @@ async function getXionTransferParams() {
   }
   const amount = await getUserInput(`Enter ${tokenConfig.baseTokenSymbol} amount (e.g., 0.01): `);
   const count = await getUserInput("Number of transfers (default: 1): ");
+  const delay = await getUserInput("Delay between transactions in seconds (default: 0): ");
   const tokenAmount = parseFloat(amount || "0.01");
   const transferCount = parseInt(count) || 1;
   if (isNaN(tokenAmount) || tokenAmount <= 0) {
@@ -712,12 +714,14 @@ async function executeSeiTransfers(params, isXion, seiWallet) {
   console.log(`${COLORS.CYAN}SEI to ${isXion ? "XION" : "CORN"} Transfers:${COLORS.RESET}\n`);
   const results = [];
   for (let i = 0; i < params.count; i++) {
+    if (i > 0 && params.delay > 0) {
+      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    }
     console.log(`Transfer ${i + 1}/${params.count}`);
     const result = isXion ? await sendSeiToXionTx(params.amount, seiWallet) : await sendSeiToCornTx(params.amount, seiWallet);
     results.push(result);
     console.log("\n");
-    await sleep(2000);
-  }
+  }  
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
   const successes = results.filter(r => r.success).length;
@@ -748,7 +752,11 @@ async function executeXionToBabylonTransfers(params) {
     throw new Error(`Insufficient XION for gas!`);
   }
   const results = [];
-  for (let i = 1; i <= params.transferCount; i++) {
+  for (let i = 0; i < params.count; i++) {
+    if (i > 0 && params.delay > 0) {
+      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    }
+    console.log(`Transfer ${i + 1}/${params.transferCount}`);
     const result = await executeXionToBabylonTransfer(
       client,
       xionWallet.address,
@@ -760,7 +768,6 @@ async function executeXionToBabylonTransfers(params) {
       params.transferCount
     );
     results.push(result);
-    await sleep(1000);
   }
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
