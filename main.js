@@ -193,7 +193,7 @@ async function getXionTransferParams() {
   const amount = await getUserInput(`Enter ${tokenConfig.baseTokenSymbol} amount (e.g., 0.01): `);
   const count = await getUserInput("Number of rounds txn (default: 1): ");
   const txns = await getUserInput("Number of txn in each round (default: 1): ");
-  const delay = await getUserInput("Delay between transactions in seconds (default: 0): ");
+  const timeout = await getUserInput("Delay between transactions in seconds (default: 0): ");
   const tokenAmount = parseFloat(amount || "0.01");
   const transferCount = parseInt(count) || 1;
   if (isNaN(tokenAmount) || tokenAmount <= 0) {
@@ -205,13 +205,14 @@ async function getXionTransferParams() {
   if (isNaN(txns) || txns < 1) {
     throw new Error("Invalid txns count.");
   }
+  const delay = (timeout ? parseInt(timeout) : 0) * 1000;
   const microAmount = Math.floor(tokenAmount * tokenConfig.microUnit).toString();
   console.log(`\n${COLORS.GREEN}[+] Configuration:${COLORS.RESET}`);
   console.log(`   Token: ${tokenConfig.baseTokenSymbol}`);
   console.log(`   Amount: ${tokenAmount} ${tokenConfig.baseTokenSymbol} per transfer`);
   console.log(`   Transfers: ${transferCount}`);
   await sleep(1000);
-  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount ,(delay ? parseInt(delay) : 0) * 1000 ,txns };
+  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount ,delay ,txns };
 }
 
 async function getBabylonTransferParams() {
