@@ -148,21 +148,26 @@ async function getTransferParams(isXionToBabylon = false) {
   
   const amountPrompt = isXionToBabylon ? "Enter token amount (e.g., 0.01): " : "Enter SEI amount (default: 0.0001): ";
   const amount = await getUserInput(amountPrompt);
-  const count = await getUserInput("Number of transfers (default: 1): ");
+  const count = await getUserInput("Number of rounds txn (default: 1): ");
+  const txns = await getUserInput("Number of txn in each round (default: 1): ");
   const delay = await getUserInput("Delay between transactions in seconds (default: 0): ");
 
   const params = {
     amount: isXionToBabylon ? (amount || "0.01") : (amount || "0.0001"),
-    count: parseInt(count) || 1
+    count: parseInt(count) || 1,
+    delay: (delay ? parseInt(delay) : 0) * 1000
+    txns: txns
   };
 
   if (isNaN(params.amount) || params.amount <= 0) {
     throw new Error("Invalid amount. Must be a positive number.");
   }
   if (isNaN(params.count) || params.count < 1) {
-    throw new Error("Invalid transfer count. Must be at least 1.");
+    throw new Error("Invalid rounds count. Must be at least 1.");
   }
-
+  if (isNaN(txns) || txns < 1) {
+    throw new Error("Invalid txns count.");
+  }
   console.log(`\n${COLORS.GREEN}[+] Configuration:${COLORS.RESET}`);
   console.log(`   Amount: ${params.amount} ${isXionToBabylon ? "Token" : "SEI"} per transfer`);
   console.log(`   Transfers: ${params.count}`);
@@ -187,7 +192,8 @@ async function getXionTransferParams() {
     throw new Error("Invalid token choice.");
   }
   const amount = await getUserInput(`Enter ${tokenConfig.baseTokenSymbol} amount (e.g., 0.01): `);
-  const count = await getUserInput("Number of transfers (default: 1): ");
+  const count = await getUserInput("Number of rounds txn (default: 1): ");
+  const txns = await getUserInput("Number of txn in each round (default: 1): ");
   const delay = await getUserInput("Delay between transactions in seconds (default: 0): ");
   const tokenAmount = parseFloat(amount || "0.01");
   const transferCount = parseInt(count) || 1;
@@ -195,7 +201,10 @@ async function getXionTransferParams() {
     throw new Error("Invalid amount.");
   }
   if (isNaN(transferCount) || transferCount < 1) {
-    throw new Error("Invalid transfer count.");
+    throw new Error("Invalid rounds count.");
+  }
+  if (isNaN(txns) || txns < 1) {
+    throw new Error("Invalid txns count.");
   }
   const microAmount = Math.floor(tokenAmount * tokenConfig.microUnit).toString();
   console.log(`\n${COLORS.GREEN}[+] Configuration:${COLORS.RESET}`);
@@ -203,7 +212,7 @@ async function getXionTransferParams() {
   console.log(`   Amount: ${tokenAmount} ${tokenConfig.baseTokenSymbol} per transfer`);
   console.log(`   Transfers: ${transferCount}`);
   await sleep(1000);
-  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount };
+  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount ,(delay ? parseInt(delay) : 0) * 1000 ,txns };
 }
 
 async function getBabylonTransferParams() {
@@ -227,7 +236,8 @@ async function getBabylonTransferParams() {
     console.log("[-] Invalid choice. Try again.");
   }
   const amount = await getUserInput("Enter BBN amount (e.g., 0.001): ");
-  const count = await getUserInput("Number of transfers (default: 1): ");
+  const count = await getUserInput("Number of rounds txn (default: 1): ");
+  const txns = await getUserInput("Number of txn in each round (default: 1): ");
   const delay = await getUserInput("Delay between transactions in seconds (default: 0): ");
   const params = {
     destination,
@@ -714,13 +724,16 @@ async function executeSeiTransfers(params, isXion, seiWallet) {
   console.log(`${COLORS.CYAN}SEI to ${isXion ? "XION" : "CORN"} Transfers:${COLORS.RESET}\n`);
   const results = [];
   for (let i = 0; i < params.count; i++) {
-    if (i > 0 && params.delay > 0) {
-      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    for (let j=0; j< params.txns; j++){
+      if (i > 0 && params.delay > 0) {
+       await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+      }
+      console.log(`Rounds ${i + 1}/${params.count}`);
+      console.log(`Txns ${j + 1}/${params.txns}`);
+      const result = isXion ? await sendSeiToXionTx(params.amount, seiWallet) : await sendSeiToCornTx(params.amount, seiWallet);
+      results.push(result);
+      console.log("\n");
     }
-    console.log(`Transfer ${i + 1}/${params.count}`);
-    const result = isXion ? await sendSeiToXionTx(params.amount, seiWallet) : await sendSeiToCornTx(params.amount, seiWallet);
-    results.push(result);
-    console.log("\n");
   }  
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
@@ -753,11 +766,12 @@ async function executeXionToBabylonTransfers(params) {
   }
   const results = [];
   for (let i = 0; i < params.count; i++) {
-    if (i > 0 && params.delay > 0) {
-      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
-    }
-    console.log(`Transfer ${i + 1}/${params.transferCount}`);
-    const result = await executeXionToBabylonTransfer(
+    for (let j=0; j< params.txns; j++) {
+      if (i > 0 && params.delay > 0) {
+       await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+      }
+      console.log(`Transfer ${i + 1}/${params.transferCount}`);
+      const result = await executeXionToBabylonTransfer(
       client,
       xionWallet.address,
       babylonAddress,
@@ -768,6 +782,7 @@ async function executeXionToBabylonTransfers(params) {
       params.transferCount
     );
     results.push(result);
+    }
   }
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
@@ -787,13 +802,16 @@ async function executeBabylonToOthersTransfers(params) {
   console.log(`${COLORS.CYAN}Babylon to ${DESTINATIONS[params.destination].name} Transfers:${COLORS.RESET}\n`);
   const results = [];
   for (let i = 0; i < params.count; i++) {
-    if (i > 0 && params.delay > 0) {
-      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    for (let j=0; j< params.txns; j++) {
+      if (i > 0 && params.delay > 0) {
+        await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+      }
+      console.log(`Rounds ${i + 1}/${params.count}`);
+      console.log(`Transfer ${j + 1}/${params.txns}`);
+      const result = await sendBabylonTx(params.amount, params.destination);
+      results.push(result);
+      console.log("\n");
     }
-    console.log(`Transfer ${i + 1}/${params.count}`);
-    const result = await sendBabylonTx(params.amount, params.destination);
-    results.push(result);
-    console.log("\n");
   }
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
