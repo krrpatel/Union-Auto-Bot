@@ -202,7 +202,7 @@ async function getXionTransferParams() {
   if (isNaN(transferCount) || transferCount < 1) {
     throw new Error("Invalid transfer count.");
   }
-  if (isNaN(params.delay) || params.delay < 0) {
+  if (isNaN(delay) || delay < 0) {
     throw new Error("Invalid delay. Must be at least or more than 0.");
   }
   const microAmount = Math.floor(tokenAmount * tokenConfig.microUnit).toString();
