@@ -149,10 +149,12 @@ async function getTransferParams(isXionToBabylon = false) {
   const amountPrompt = isXionToBabylon ? "Enter token amount (e.g., 0.01): " : "Enter SEI amount (default: 0.0001): ";
   const amount = await getUserInput(amountPrompt);
   const count = await getUserInput("Number of transfers (default: 1): ");
+  const delay = await getUsserInput("Enter The Delay Between Txn In sec : ");
 
   const params = {
     amount: isXionToBabylon ? (amount || "0.01") : (amount || "0.0001"),
-    count: parseInt(count) || 1
+    count: parseInt(count) || 1,
+    delay: (delay ? parseInt(delay) : 0) * 1000
   };
 
   if (isNaN(params.amount) || params.amount <= 0) {
@@ -160,6 +162,9 @@ async function getTransferParams(isXionToBabylon = false) {
   }
   if (isNaN(params.count) || params.count < 1) {
     throw new Error("Invalid transfer count. Must be at least 1.");
+  }
+  if (isNaN(params.delay) || params.delay < 0) {
+    throw new Error("Invalid delay. Must be at least or more than 0.");
   }
 
   console.log(`\n${COLORS.GREEN}[+] Configuration:${COLORS.RESET}`);
@@ -187,7 +192,9 @@ async function getXionTransferParams() {
   }
   const amount = await getUserInput(`Enter ${tokenConfig.baseTokenSymbol} amount (e.g., 0.01): `);
   const count = await getUserInput("Number of transfers (default: 1): ");
+  const timeout = await getUserInput("Delay between transactions in seconds (default: 0): ");
   const tokenAmount = parseFloat(amount || "0.01");
+  const delay = (delay ? parseInt(delay) : 0) * 1000;
   const transferCount = parseInt(count) || 1;
   if (isNaN(tokenAmount) || tokenAmount <= 0) {
     throw new Error("Invalid amount.");
@@ -195,13 +202,16 @@ async function getXionTransferParams() {
   if (isNaN(transferCount) || transferCount < 1) {
     throw new Error("Invalid transfer count.");
   }
+  if (isNaN(params.delay) || params.delay < 0) {
+    throw new Error("Invalid delay. Must be at least or more than 0.");
+  }
   const microAmount = Math.floor(tokenAmount * tokenConfig.microUnit).toString();
   console.log(`\n${COLORS.GREEN}[+] Configuration:${COLORS.RESET}`);
   console.log(`   Token: ${tokenConfig.baseTokenSymbol}`);
   console.log(`   Amount: ${tokenAmount} ${tokenConfig.baseTokenSymbol} per transfer`);
   console.log(`   Transfers: ${transferCount}`);
   await sleep(1000);
-  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount };
+  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount, delay };
 }
 
 async function getBabylonTransferParams() {
@@ -712,11 +722,13 @@ async function executeSeiTransfers(params, isXion, seiWallet) {
   console.log(`${COLORS.CYAN}SEI to ${isXion ? "XION" : "CORN"} Transfers:${COLORS.RESET}\n`);
   const results = [];
   for (let i = 0; i < params.count; i++) {
+    if (i > 0 && params.delay > 0) {
+      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    }
     console.log(`Transfer ${i + 1}/${params.count}`);
     const result = isXion ? await sendSeiToXionTx(params.amount, seiWallet) : await sendSeiToCornTx(params.amount, seiWallet);
     results.push(result);
     console.log("\n");
-    await sleep(2000);
   }
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
@@ -748,7 +760,10 @@ async function executeXionToBabylonTransfers(params) {
     throw new Error(`Insufficient XION for gas!`);
   }
   const results = [];
-  for (let i = 1; i <= params.transferCount; i++) {
+  for (let i = 0; i < params.transferCount; i++) {
+    if (i > 0 && params.delay > 0) {
+      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    }
     const result = await executeXionToBabylonTransfer(
       client,
       xionWallet.address,
@@ -758,9 +773,8 @@ async function executeXionToBabylonTransfers(params) {
       params.tokenType,
       i,
       params.transferCount
-    );
+     );
     results.push(result);
-    await sleep(1000);
   }
   console.log(`${COLORS.CYAN}Summary:${COLORS.RESET}`);
   console.log("=================");
