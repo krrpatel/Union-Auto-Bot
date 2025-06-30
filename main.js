@@ -149,7 +149,7 @@ async function getTransferParams(isXionToBabylon = false) {
   const amountPrompt = isXionToBabylon ? "Enter token amount (e.g., 0.01): " : "Enter SEI amount (default: 0.0001): ";
   const amount = await getUserInput(amountPrompt);
   const count = await getUserInput("Number of transfers (default: 1): ");
-  const delay = await getUsserInput("Enter The Delay Between Txn In sec : ");
+  const delay = await getUserInput("Enter The Delay Between Txn In sec : ");
 
   const params = {
     amount: isXionToBabylon ? (amount || "0.01") : (amount || "0.0001"),
