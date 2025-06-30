@@ -34,9 +34,10 @@ const BABYLON_TESTNET = {
 };
 
 const DESTINATIONS = {
-  corn: { name: "Corn", channelId: 3, tokenAddress: "e53dcec07d16d88e386ae0710e86d9a400f83c31" },
-  sepolia: { name: "Sepolia", channelId: 1, tokenAddress: "bd030914ab8d7ab1bd626f09e47c7cc2881550a3" },
-  holesky: { name: "Holesky", channelId: 2, tokenAddress: "77b99a27a5fed3bc8fb3e2f1063181f82ec48637" }
+  corn:    { name: "Corn",    channelId: 3, tokenAddress: "D1A6C6516a3A8a52DDcc7C500fcb10467D929878" },
+  sepolia: { name: "Sepolia", channelId: 1, tokenAddress: "D1A6C6516a3A8a52DDcc7C500fcb10467D929878" },
+  holesky: { name: "Holesky", channelId: 2, tokenAddress: "D1A6C6516a3A8a52DDcc7C500fcb10467D929878" },
+  sei:     { name: "Sei",     channelId: 6, tokenAddress: "D1A6C6516a3A8a52DDcc7C500fcb10467D929878" }
 };
 
 const provider = new ethers.JsonRpcProvider("https://evm-rpc-testnet.sei-apis.com");
