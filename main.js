@@ -753,6 +753,7 @@ async function executeXionToBabylonTransfers(params) {
   const xionBalance = await client.getBalance(xionWallet.address, "uxion");
   const totalMicroAmount = parseInt(params.microAmount) * params.transferCount;
   const totalGas = 697 * params.transferCount;
+  const timeout = params.delay;
   if (parseInt(tokenBalance.amount) < totalMicroAmount) {
     throw new Error(`Insufficient ${params.tokenConfig.baseTokenSymbol}!`);
   }
@@ -761,8 +762,8 @@ async function executeXionToBabylonTransfers(params) {
   }
   const results = [];
   for (let i = 0; i < params.transferCount; i++) {
-    if (i > 0 && params.delay > 0) {
-      await displayLoading(`Waiting ${params.delay / 1000}s before next transfer`, params.delay);
+    if (i > 0 && timeout > 0) {
+      await displayLoading(`Waiting ${timeout / 1000}s before next transfer`, timeout);
     }
     const result = await executeXionToBabylonTransfer(
       client,
