@@ -211,7 +211,15 @@ async function getXionTransferParams() {
   console.log(`   Amount: ${tokenAmount} ${tokenConfig.baseTokenSymbol} per transfer`);
   console.log(`   Transfers: ${transferCount}`);
   await sleep(1000);
-  return { tokenType, tokenConfig, tokenAmount, microAmount, transferCount, delay };
+  const params = {
+    tokenType,
+    tokenConfig,
+    tokenAmount,
+    microAmount,
+    transferCount,
+    delay
+  };
+  return params;
 }
 
 async function getBabylonTransferParams() {
