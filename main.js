@@ -194,7 +194,7 @@ async function getXionTransferParams() {
   const count = await getUserInput("Number of transfers (default: 1): ");
   const timeout = await getUserInput("Delay between transactions in seconds (default: 0): ");
   const tokenAmount = parseFloat(amount || "0.01");
-  const delay = (delay ? parseInt(delay) : 0) * 1000;
+  const delay = (timeout ? parseInt(timeout) : 0) * 1000;
   const transferCount = parseInt(count) || 1;
   if (isNaN(tokenAmount) || tokenAmount <= 0) {
     throw new Error("Invalid amount.");
